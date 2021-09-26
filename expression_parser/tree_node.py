@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, List
 
 
 class TreeNode(ABC):
@@ -17,6 +17,15 @@ class TreeNode(ABC):
 
     def _get_error_here(self) -> str:
         return f"Invalid tree topology at node with ID {self._id}."
+
+    def _get_representation(self, nest=0):
+        representation = f"{nest * '|---'}{type(self).__name__}\n"
+        for child in self._children:
+            representation += child._get_representation(nest + 1)
+        return representation
+    
+    def __repr__(self):
+        return self._get_representation()
 
 
 class TNOperator(TreeNode):
@@ -94,6 +103,9 @@ class TNExpression(TreeNode):
             raise Exception(
                 f"{self._get_error_here()} Expressions can only have 1 child.")
 
+    def get_value(self) -> bool:
+        return self._children[0].get_value()
+
 
 class TNVariable(TreeNode):
     def __init__(self, id: int, name: str):
@@ -104,6 +116,9 @@ class TNVariable(TreeNode):
         raise Exception(
             f"{self._get_error_here()} Variables cannot have children.")
 
+    def get_value(self, variables: Dict[str, bool]) -> bool:
+        return variables[self._name]
+
 
 class TNValue(TreeNode):
     def __init__(self, id: int, value: bool):
@@ -113,3 +128,6 @@ class TNValue(TreeNode):
     def add_child(self, _: TreeNode) -> None:
         raise Exception(
             f"{self._get_error_here()} Values cannot have children.")
+
+    def get_value(self) -> bool:
+        return self._value
