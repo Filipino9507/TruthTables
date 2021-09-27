@@ -39,7 +39,7 @@ class ExpressionParser:
         (re.compile("\["), TokenType.LBRACKET),
         (re.compile("\]"), TokenType.RBRACKET),
         (re.compile("[01]"), TokenType.VALUE),
-        (re.compile("[a-zA-Z]+"), TokenType.VARIABLE)
+        (re.compile("[a-zA-Z_][a-zA-Z0-9_]*"), TokenType.VARIABLE)
     ]
 
     TREE_BUILDING_STRATEGIES: List[Callable[[
@@ -97,7 +97,7 @@ class ExpressionParser:
             node.add_child(self._build_tree(token_list[1:len(token_list)-1]))
             return node
         if self._is_enclosed(token_list, lchar="[", rchar="]"):
-            node = TNExpression(0, True)
+            node = TNExpression(0, True, " ".join([t.value for t in token_list]))
             node.add_child(self._build_tree(token_list[1:len(token_list)-1]))
             return node
         return None

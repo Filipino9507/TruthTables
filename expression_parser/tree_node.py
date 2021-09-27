@@ -12,7 +12,12 @@ class TreeNode(ABC):
         self._children.append(child)
 
     @abstractmethod
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
         pass
 
     def _get_error_here(self) -> str:
@@ -23,7 +28,7 @@ class TreeNode(ABC):
         for child in self._children:
             representation += child._get_representation(nest + 1)
         return representation
-    
+
     def __repr__(self):
         return self._get_representation()
 
@@ -50,45 +55,87 @@ class TNOperatorAND(TNOperator):
     def __init__(self, id: int):
         super().__init__(id, 2)
 
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
         self._check_validity()
-        return self._children[0].get_value() and self._children[1].get_value()
+        lvalue = self._children[0].get_value(variable_dict, value_combination,
+            expression_values_dict)
+        rvalue = self._children[1].get_value(variable_dict,
+            value_combination, expression_values_dict)
+        return lvalue and rvalue
 
 
 class TNOperatorOR(TNOperator):
     def __init__(self, id: int):
         super().__init__(id, 2)
 
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
         self._check_validity()
-        return self._children[0].get_value() or self._children[1].get_value()
+        lvalue = self._children[0].get_value(variable_dict, value_combination,
+            expression_values_dict)
+        rvalue = self._children[1].get_value(variable_dict,
+            value_combination, expression_values_dict)
+        return lvalue or rvalue
 
 
 class TNOperatorNOT(TNOperator):
     def __init__(self, id: int):
         super().__init__(id, 1)
 
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
         self._check_validity()
-        return not self._children[0].get_value()
+        return not self._children[0].get_value(variable_dict, value_combination,
+            expression_values_dict)
 
 
 class TNOperatorImplication(TNOperator):
     def __init__(self, id: int):
         super().__init__(id, 2)
 
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
         self._check_validity()
-        return not(self._children[0].get_value() and not self._children[1].get_value())
+        lvalue = self._children[0].get_value(variable_dict, value_combination,
+            expression_values_dict)
+        rvalue = self._children[1].get_value(variable_dict,
+            value_combination, expression_values_dict)
+        return not(lvalue and not rvalue)
 
 
 class TNOperatorEquivalency(TNOperator):
     def __init__(self, id: int):
         super().__init__(id, 2)
 
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
         self._check_validity()
-        return self._children[0].get_value() == self._children[1].get_value()
+        lvalue = self._children[0].get_value(variable_dict, value_combination,
+            expression_values_dict)
+        rvalue = self._children[1].get_value(variable_dict,
+            value_combination, expression_values_dict)
+        return lvalue == rvalue
 
 
 class TNExpression(TreeNode):
@@ -104,8 +151,18 @@ class TNExpression(TreeNode):
             raise Exception(
                 f"{self._get_error_here()} Expressions can only have 1 child.")
 
-    def get_value(self) -> bool:
-        return self._children[0].get_value()
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        expression_values_dict: Dict[str, bool]
+    ) -> bool:
+        
+        value = self._children[0].get_value(variable_dict, value_combination,
+            expression_values_dict)
+        if self._to_register:
+            expression_values_dict[self._table_repr] = value
+        return value
 
 
 class TNVariable(TreeNode):
@@ -117,8 +174,13 @@ class TNVariable(TreeNode):
         raise Exception(
             f"{self._get_error_here()} Variables cannot have children.")
 
-    def get_value(self, variables: Dict[str, bool]) -> bool:
-        return variables[self._name]
+    def get_value(
+        self,
+        variable_dict: Dict[str, int],
+        value_combination: List[bool],
+        _: Dict[str, bool]
+    ) -> bool:
+        return value_combination[variable_dict[self._name]]
 
 
 class TNValue(TreeNode):
@@ -130,5 +192,10 @@ class TNValue(TreeNode):
         raise Exception(
             f"{self._get_error_here()} Values cannot have children.")
 
-    def get_value(self) -> bool:
+    def get_value(
+        self,
+        _: Dict[str, int],
+        __: List[bool],
+        ___: Dict[str, bool]
+    ) -> bool:
         return self._value
