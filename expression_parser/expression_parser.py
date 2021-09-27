@@ -1,7 +1,7 @@
 import re
-from typing import List, Tuple, Union
+from typing import Callable, List, Set, Tuple, Union
 from enum import Enum, auto
-from expression_parser.tree_node import TNExpression, TNOperator, TNOperatorAND, TNOperatorEquivalency, TNOperatorImplication, TNOperatorNOT, TNOperatorOR, TNValue, TNVariable, TreeNode
+from expression_parser.tree_node import TNExpression, TNOperatorAND, TNOperatorEquivalency, TNOperatorImplication, TNOperatorNOT, TNOperatorOR, TNValue, TNVariable, TreeNode
 
 
 class TokenType(Enum):
@@ -42,6 +42,9 @@ class ExpressionParser:
         (re.compile("[a-zA-Z]+"), TokenType.VARIABLE)
     ]
 
+    TREE_BUILDING_STRATEGIES: List[Callable[[
+        List[Token]], Union[List[Token], None]]] = []
+
     OPERATOR_PRIORITY: List[TokenType] = [
         TokenType.EQUIVALENCY,
         TokenType.IMPLICATION,
@@ -51,7 +54,10 @@ class ExpressionParser:
     ]
 
     def __init__(self):
-        pass
+        self.TREE_BUILDING_STRATEGIES.append(self._try_build_expression)
+        self.TREE_BUILDING_STRATEGIES.append(self._try_build_operator)
+        self.TREE_BUILDING_STRATEGIES.append(self._try_build_leaves)
+        self._variables = set()
 
     def _tokenize(self, expression: str) -> List[Token]:
         token_list = []
@@ -84,11 +90,8 @@ class ExpressionParser:
             if nest == 0 and i != length-1:
                 return False
         return True
-            
 
-    def _build_tree(self, token_list: List[Token]) -> TreeNode:
-        # print("CURRENT TOKEN LIST: ", [t.value for t in token_list])
-
+    def _try_build_expression(self, token_list: List[Token]) -> Union[TreeNode, None]:
         if self._is_enclosed(token_list, lchar="(", rchar=")"):
             node = TNExpression(0, False)
             node.add_child(self._build_tree(token_list[1:len(token_list)-1]))
@@ -97,39 +100,74 @@ class ExpressionParser:
             node = TNExpression(0, True)
             node.add_child(self._build_tree(token_list[1:len(token_list)-1]))
             return node
+        return None
 
+    def _try_build_operator(self, token_list: List[Token]) -> Union[TreeNode, None]:
         for operator in self.OPERATOR_PRIORITY:
+            nest = 0
             for i, token in enumerate(token_list):
-                if token.token_type == operator:
-                    if token.token_type == TokenType.AND:
+                tt = token.token_type
+                if tt in (TokenType.LPAREN, TokenType.LBRACKET):
+                    nest += 1
+                elif tt in (TokenType.RPAREN, TokenType.RBRACKET):
+                    nest -= 1
+                elif tt == operator and nest == 0:
+                    if tt == TokenType.AND:
                         node = TNOperatorAND(0)
-                    elif token.token_type == TokenType.OR:
+                    elif tt == TokenType.OR:
                         node = TNOperatorOR(0)
-                    elif token.token_type == TokenType.NOT:
+                    elif tt == TokenType.NOT:
                         node = TNOperatorNOT(0)
-                    elif token.token_type == TokenType.IMPLICATION:
+                    elif tt == TokenType.IMPLICATION:
                         node = TNOperatorImplication(0)
-                    elif token.token_type == TokenType.EQUIVALENCY:
+                    elif tt == TokenType.EQUIVALENCY:
                         node = TNOperatorEquivalency(0)
-                    node.add_child(self._build_tree(token_list[:i]))
+
+                    if tt != TokenType.NOT:
+                        node.add_child(self._build_tree(token_list[:i]))
+                    elif i != 0:
+                        raise Exception("Invalid NOT syntax.")
                     node.add_child(self._build_tree(token_list[i+1:]))
                     return node
+        return None
 
+    def _try_build_leaves(self, token_list: List[Token]) -> Union[TreeNode, None]:
         if len(token_list) != 0:
             last_token = token_list[0]
             if last_token.token_type == TokenType.VALUE:
                 return TNValue(0, last_token.value)
             if last_token.token_type == TokenType.VARIABLE:
+                self._variables.add(last_token.value)
                 return TNVariable(0, last_token.value)
+
+    def _build_tree(self, token_list: List[Token]) -> TreeNode:
+        print("CURRENT TOKEN LIST: ", [t.value for t in token_list])
+
+        for tree_building_strategy in self.TREE_BUILDING_STRATEGIES:
+            result = tree_building_strategy(token_list)
+            if result:
+                return result
 
         raise Exception("Invalid syntax.")
 
-    def parse(self, expression: str) -> None:
-        token_list = self._tokenize(expression)
+    def parse(self, expression: str) -> Union[
+        Tuple[TreeNode, Set[str], None],
+        Tuple[None, None, Exception]
+    ]:
+        try:
+            print("[TOKENIZING]")
+            token_list = self._tokenize(expression)
+            print("[PARSING]")
+            self._variables.clear()
+            tree = self._build_tree(token_list)
+            print("[GENERATING_TABLE]")
 
-        for t in token_list:
-            print(f"TYPE: {t.token_type}, VALUE: {t.value}")
+            for t in token_list:
+                print(f"TYPE: {t.token_type}, VALUE: {t.value}")
+            print(tree)
+            print(self._variables)
 
-        tree = self._build_tree(token_list)
-
-        print(tree)
+            return [tree, self._variables, None]
+        except Exception as e:
+            print(f"[ERROR] {str(e)}")
+            return [None, None, e]

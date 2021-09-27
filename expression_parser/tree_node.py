@@ -92,9 +92,10 @@ class TNOperatorEquivalency(TNOperator):
 
 
 class TNExpression(TreeNode):
-    def __init__(self, id: int, to_register: bool):
+    def __init__(self, id: int, to_register: bool, table_repr: str = ""):
         super().__init__(id)
         self._to_register = to_register
+        self._table_repr = table_repr
 
     def add_child(self, child: TreeNode) -> None:
         if len(self._children) == 0:
