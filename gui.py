@@ -1,7 +1,29 @@
 import tkinter as tk
+from typing import List, Union
 
-from expression_parser.expression_parser import ExpressionParser
-from table_generator.table_generator import TableGenerator
+from parser.expression_parser import ExpressionParser
+from parser.table_generator import TableGenerator
+
+class LogicTable(tk.Frame):
+    TEST_DATA = [
+        ["A", "B", "A & B", "V"],
+        [1, 1, 1, 1],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0]
+    ]
+
+    def __init__(self, master):
+        super().__init__(master)
+        self.logic_table = None
+
+    def populate(self, data: List[List[Union[str, bool]]]):
+        print("POPULATING TABLE")
+        for i in range(len(self.TEST_DATA)):
+            for j in range(len(self.TEST_DATA[0])):
+                self.logic_table = tk.Entry(self, width=10)
+                self.logic_table.grid(row=i, column=j)
+                self.logic_table.insert(tk.END, self.TEST_DATA[i][j])
 
 
 class GUI(tk.Frame):
@@ -18,6 +40,7 @@ class GUI(tk.Frame):
         self.setup_button_generate_table()
         self.setup_button_save_function()
         self.setup_label_error_message()
+        self.setup_logic_table()
 
     def setup_entry_expression(self):
         self.entry_expression_content = tk.StringVar()
@@ -47,6 +70,8 @@ class GUI(tk.Frame):
                 return
             self.label_error_message_content.set("")
             content = self.table_generator.generate_table_content(tree, variables)
+            self.logic_table.populate([])
+            
 
         self.button_generate_table = tk.Button(
             self, text="Generate Table", command=on_button_generate_table_click)
@@ -61,3 +86,7 @@ class GUI(tk.Frame):
         self.label_error_message = tk.Label(
             self, textvariable=self.label_error_message_content, fg="#f00")
         self.label_error_message.pack(side="top")
+
+    def setup_logic_table(self):
+        self.logic_table = LogicTable(self)
+

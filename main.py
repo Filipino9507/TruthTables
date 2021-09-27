@@ -1,8 +1,8 @@
 import tkinter as tk
 from const import WIN_WIDTH, WIN_HEIGHT
 from gui import GUI
-from expression_parser.expression_parser import ExpressionParser
-from table_generator.table_generator import TableGenerator
+from parser.expression_parser import ExpressionParser
+from parser.table_generator import TableGenerator
 
 
 def main():

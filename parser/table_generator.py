@@ -1,5 +1,5 @@
 from typing import List, Set
-from expression_parser.tree_node import TreeNode
+from parser.tree_node import TreeNode
 
 
 class TableGenerator:

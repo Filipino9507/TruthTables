@@ -1,7 +1,7 @@
 import re
 from typing import Callable, List, Set, Tuple, Union
 from enum import Enum, auto
-from expression_parser.tree_node import TNExpression, TNOperatorAND, TNOperatorEquivalency, TNOperatorImplication, TNOperatorNOT, TNOperatorOR, TNValue, TNVariable, TreeNode
+from parser.tree_node import TNExpression, TNOperatorAND, TNOperatorEquivalency, TNOperatorImplication, TNOperatorNOT, TNOperatorOR, TNValue, TNVariable, TreeNode
 
 
 class TokenType(Enum):
