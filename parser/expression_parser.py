@@ -167,6 +167,9 @@ class ExpressionParser:
             print(tree)
             print(self._variables)
 
+            if len(self._variables) > 4:
+                raise Exception("Too many variables, cannot show table.")
+
             return [tree, self._variables, None]
         except Exception as e:
             print(f"[ERROR] {str(e)}")

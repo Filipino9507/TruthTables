@@ -6,7 +6,7 @@ class TableGenerator:
     def __init__(self):
         pass
 
-    def _get_value_combinations(
+    def _generate_value_combinations(
         self,
         current: List[bool],
         idx: int,
@@ -17,26 +17,34 @@ class TableGenerator:
 
         value_combinations = []
         current[idx] = True
-        value_combinations += self._get_value_combinations(
+        value_combinations += self._generate_value_combinations(
             current[:], idx + 1, variable_count)
         current[idx] = False
-        value_combinations += self._get_value_combinations(
+        value_combinations += self._generate_value_combinations(
             current[:], idx + 1, variable_count)
 
         return value_combinations
 
     def generate_table_content(self, tree: TreeNode, variables: Set[str]) -> List[List[str]]:
-        variable_ls = sorted(list(variables))
+        variable_ls = sorted(list(variables), key=str.casefold)
         variable_dict = {name: i for i, name in enumerate(variable_ls)}
-        value_combinations = self._get_value_combinations(
+        value_combinations = self._generate_value_combinations(
             [None] * len(variable_ls), 0, len(variable_ls))
+        expression_names_ls = tree.get_expression_names()
 
-        # print(f"VALUE COMBINATIONS: {value_combinations}")
-        # print(f"VARIABLE DICT: {variable_dict}")
-
+        table_content = [variable_ls + expression_names_ls + ["V"]]
         for value_combination in value_combinations:
             expression_values_dict = {}
-            print(f"COMBINATION: {tree.get_value(variable_dict, value_combination, expression_values_dict)}")
-            print(f"EXPRESSIONS: {expression_values_dict}")
+            result_value = tree.get_value(
+                variable_dict, value_combination, expression_values_dict)
 
-        return []
+            table_content.append(
+                [int(x) for x in value_combination] +
+                [expression_values_dict[expression_name]
+                    for expression_name in expression_names_ls] +
+                [result_value]
+            )
+            # print(f"COMBINATION: {result_value}")
+            # print(f"EXPRESSIONS: {expression_values_dict}")
+
+        return table_content

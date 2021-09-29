@@ -29,6 +29,12 @@ class TreeNode(ABC):
             representation += child._get_representation(nest + 1)
         return representation
 
+    def get_expression_names(self) -> List[str]:
+        expression_names = []
+        for child in self._children:
+            expression_names += child.get_expression_names()
+        return expression_names
+
     def __repr__(self):
         return self._get_representation()
 
@@ -63,9 +69,9 @@ class TNOperatorAND(TNOperator):
     ) -> bool:
         self._check_validity()
         lvalue = self._children[0].get_value(variable_dict, value_combination,
-            expression_values_dict)
+                                             expression_values_dict)
         rvalue = self._children[1].get_value(variable_dict,
-            value_combination, expression_values_dict)
+                                             value_combination, expression_values_dict)
         return lvalue and rvalue
 
 
@@ -81,9 +87,9 @@ class TNOperatorOR(TNOperator):
     ) -> bool:
         self._check_validity()
         lvalue = self._children[0].get_value(variable_dict, value_combination,
-            expression_values_dict)
+                                             expression_values_dict)
         rvalue = self._children[1].get_value(variable_dict,
-            value_combination, expression_values_dict)
+                                             value_combination, expression_values_dict)
         return lvalue or rvalue
 
 
@@ -99,7 +105,7 @@ class TNOperatorNOT(TNOperator):
     ) -> bool:
         self._check_validity()
         return not self._children[0].get_value(variable_dict, value_combination,
-            expression_values_dict)
+                                               expression_values_dict)
 
 
 class TNOperatorImplication(TNOperator):
@@ -114,9 +120,9 @@ class TNOperatorImplication(TNOperator):
     ) -> bool:
         self._check_validity()
         lvalue = self._children[0].get_value(variable_dict, value_combination,
-            expression_values_dict)
+                                             expression_values_dict)
         rvalue = self._children[1].get_value(variable_dict,
-            value_combination, expression_values_dict)
+                                             value_combination, expression_values_dict)
         return not(lvalue and not rvalue)
 
 
@@ -132,9 +138,9 @@ class TNOperatorEquivalency(TNOperator):
     ) -> bool:
         self._check_validity()
         lvalue = self._children[0].get_value(variable_dict, value_combination,
-            expression_values_dict)
+                                             expression_values_dict)
         rvalue = self._children[1].get_value(variable_dict,
-            value_combination, expression_values_dict)
+                                             value_combination, expression_values_dict)
         return lvalue == rvalue
 
 
@@ -157,12 +163,18 @@ class TNExpression(TreeNode):
         value_combination: List[bool],
         expression_values_dict: Dict[str, bool]
     ) -> bool:
-        
+
         value = self._children[0].get_value(variable_dict, value_combination,
             expression_values_dict)
         if self._to_register:
             expression_values_dict[self._table_repr] = value
         return value
+
+    def get_expression_names(self) -> List[str]:
+        expression_names = super().get_expression_names()
+        if self._to_register:
+            return expression_names + [self._table_repr]
+        return expression_names
 
 
 class TNVariable(TreeNode):
@@ -182,6 +194,9 @@ class TNVariable(TreeNode):
     ) -> bool:
         return value_combination[variable_dict[self._name]]
 
+    def get_expression_names(self) -> List[str]:
+        return []
+
 
 class TNValue(TreeNode):
     def __init__(self, id: int, value: bool):
@@ -199,3 +214,6 @@ class TNValue(TreeNode):
         ___: Dict[str, bool]
     ) -> bool:
         return self._value
+
+    def get_expression_names(self) -> List[str]:
+        return []
