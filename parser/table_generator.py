@@ -44,7 +44,5 @@ class TableGenerator:
                     for expression_name in expression_names_ls] +
                 [result_value]
             )
-            # print(f"COMBINATION: {result_value}")
-            # print(f"EXPRESSIONS: {expression_values_dict}")
 
         return table_content

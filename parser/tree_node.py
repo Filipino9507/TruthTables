@@ -148,7 +148,8 @@ class TNExpression(TreeNode):
     def __init__(self, id: int, to_register: bool, table_repr: str = ""):
         super().__init__(id)
         self._to_register = to_register
-        self._table_repr = table_repr
+        self._table_repr = table_repr[1:-1] \
+            .strip().replace("[", "(").replace("]", ")")
 
     def add_child(self, child: TreeNode) -> None:
         if len(self._children) == 0:
@@ -165,7 +166,7 @@ class TNExpression(TreeNode):
     ) -> bool:
 
         value = self._children[0].get_value(variable_dict, value_combination,
-            expression_values_dict)
+                                            expression_values_dict)
         if self._to_register:
             expression_values_dict[self._table_repr] = value
         return value
