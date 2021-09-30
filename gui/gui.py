@@ -3,6 +3,7 @@ import tkinter as tk
 from gui.logic_table import LogicTable
 from parser.expression_parser import ExpressionParser
 from parser.table_generator import TableGenerator
+from function_manager.function_manager import FunctionManager
 
 
 class GUI(tk.Frame):

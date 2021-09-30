@@ -200,9 +200,9 @@ class TNVariable(TreeNode):
 
 
 class TNValue(TreeNode):
-    def __init__(self, id: int, value: bool):
+    def __init__(self, id: int, value: str):
         super().__init__(id)
-        self._value = value
+        self._value = bool(int(value))
 
     def add_child(self, _: TreeNode) -> None:
         raise Exception(

@@ -60,6 +60,8 @@ class ExpressionParser:
         self._variables = set()
 
     def _tokenize(self, expression: str) -> List[Token]:
+        if len(expression) == 0:
+            raise Exception("No expression entered.")
         token_list = []
         expression = "".join(expression.split())
         while len(expression) > 0:
@@ -74,6 +76,36 @@ class ExpressionParser:
                 raise Exception(
                     f"Invalid symbol at: {expression[:min(5, len(expression))]}")
         return token_list
+
+    @staticmethod
+    def _check_syntax(token_list: List[Token]) -> None:
+        LENCLOSERS = (TokenType.LPAREN, TokenType.LBRACKET)
+        RENCLOSERS = (TokenType.RPAREN, TokenType.RBRACKET)
+        OPERATORS = (TokenType.AND, TokenType.OR,
+                     TokenType.IMPLICATION, TokenType.EQUIVALENCY)
+        limit = len(token_list) - 1
+        for i in range(limit):
+            a, b = token_list[i], token_list[i+1]
+            if a.token_type in LENCLOSERS and b.token_type in OPERATORS:
+                raise Exception("Invalid syntax.")
+            if a.token_type in OPERATORS + (TokenType.NOT,) and b.token_type in RENCLOSERS:
+                raise Exception("Invalid syntax.")
+
+        paren_nest, bracket_nest = 0, 0
+        for token in token_list:
+            tt = token.token_type
+            if tt == TokenType.LPAREN:
+                paren_nest += 1
+            elif tt == TokenType.RPAREN:
+                paren_nest -= 1
+            elif tt == TokenType.LBRACKET:
+                bracket_nest += 1
+            elif tt == TokenType.RBRACKET:
+                bracket_nest -= 1
+            if paren_nest < 0 or bracket_nest < 0:
+                raise Exception("Invalid syntax.")
+        if paren_nest != 0 or bracket_nest != 0:
+            raise Exception("Invalid syntax.")
 
     def _is_enclosed(self, token_list: List[Token], *, lchar: str, rchar: str) -> bool:
         length = len(token_list)
@@ -97,7 +129,8 @@ class ExpressionParser:
             node.add_child(self._build_tree(token_list[1:len(token_list)-1]))
             return node
         if self._is_enclosed(token_list, lchar="[", rchar="]"):
-            node = TNExpression(0, True, " ".join([t.value for t in token_list]))
+            node = TNExpression(0, True, " ".join(
+                [t.value for t in token_list]))
             node.add_child(self._build_tree(token_list[1:len(token_list)-1]))
             return node
         return None
@@ -157,6 +190,7 @@ class ExpressionParser:
         try:
             print("[TOKENIZING]")
             token_list = self._tokenize(expression)
+            self._check_syntax(token_list)
             print("[PARSING]")
             self._variables.clear()
             tree = self._build_tree(token_list)
