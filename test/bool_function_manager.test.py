@@ -1,10 +1,10 @@
 import unittest
-from function_manager.function_manager import FunctionManager
+from bool_function.bool_function_manager import BoolFunctionManager
 
 class FunctionManager_Test(unittest.TestCase):
     def save_function_test(self):
         test_filename = "functions_test"
-        manager = FunctionManager(test_filename)
+        manager = BoolFunctionManager(test_filename)
         manager.save_function("func_1", "a&(b|c)=>a", ["a", "b", "c"])
 
         file_content = None

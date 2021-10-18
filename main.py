@@ -3,6 +3,7 @@ from const import WIN_WIDTH, WIN_HEIGHT
 from gui.gui import GUI
 from parser.expression_parser import ExpressionParser
 from parser.table_generator import TableGenerator
+from bool_function.bool_function_manager import BoolFunctionManager
 
 
 def main():
@@ -13,9 +14,10 @@ def main():
 
     expression_parser = ExpressionParser()
     table_generator = TableGenerator()
+    bool_function_manager = BoolFunctionManager("functions")
 
     gui = GUI(master=root, expression_parser=expression_parser,
-              table_generator=table_generator)
+              table_generator=table_generator, bool_function_manager=bool_function_manager)
     gui.mainloop()
 
 

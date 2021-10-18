@@ -4,15 +4,21 @@ from gui.logic_table import LogicTable
 from parser.expression_parser import ExpressionParser
 from parser.table_generator import TableGenerator
 from bool_function.bool_function_manager import BoolFunctionManager
+from bool_function.bool_function import BoolFunction
 
 
 class GUI(tk.Frame):
-    def __init__(self, *, master, expression_parser: ExpressionParser, table_generator: TableGenerator):
+    def __init__(self, *, master, expression_parser: ExpressionParser, table_generator: TableGenerator, bool_function_manager: BoolFunctionManager):
         tk.Frame.__init__(self, master)
         self.master = master
         self.expression_parser = expression_parser
         self.table_generator = table_generator
+        self.bool_function_manager = bool_function_manager
         self.pack()
+
+        self.current_expression = ""
+        self.current_variable_ls = []
+
         self.setup()
 
     def setup(self):
@@ -47,8 +53,8 @@ class GUI(tk.Frame):
         def on_button_generate_table_click():
             if not self.entry_expression_has_changed:
                 return
-            tree, variables, err = self.expression_parser.parse(
-                self.entry_expression_content.get().strip())
+            expr = self.entry_expression_content.get().strip()
+            tree, variables, err = self.expression_parser.parse(expr)
             if err:
                 self.label_error_message_content.set(str(err))
                 return
@@ -57,13 +63,23 @@ class GUI(tk.Frame):
                 tree, variables)
             self.entry_expression_has_changed = False
             self.logic_table.populate(content)
+            self.current_variable_ls = variables
 
         self.button_generate_table = tk.Button(
             self, text="Generate Table", command=on_button_generate_table_click)
         self.button_generate_table.pack(side="top")
 
     def setup_button_save_function(self):
-        self.button_save_function = tk.Button(self, text="Save Function")
+        def on_button_save_function():
+            if len(self.entry_expression_content.get()) == 0:
+                self.label_error_message_content.set(
+                    "No expression to save as function.")
+                return
+            new_function = BoolFunction(
+                "FUNCTION_NAME", self.entry_expression_content.get(), self.current_variable_ls)
+            self.bool_function_manager.save(new_function)
+        self.button_save_function = tk.Button(
+            self, text="Save Last Function", command=on_button_save_function)
         self.button_save_function.pack(side="top")
 
     def setup_label_error_message(self):
