@@ -3,7 +3,7 @@ import tkinter as tk
 from gui.logic_table import LogicTable
 from parser.expression_parser import ExpressionParser
 from parser.table_generator import TableGenerator
-from function_manager.function_manager import FunctionManager
+from bool_function.bool_function_manager import BoolFunctionManager
 
 
 class GUI(tk.Frame):
