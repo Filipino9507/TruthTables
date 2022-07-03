@@ -24,7 +24,7 @@ class GUI(tk.Frame):
     def setup(self):
         self.setup_entry_expression()
         self.setup_button_generate_table()
-        self.setup_button_save_function()
+        #self.setup_button_save_function()
         self.setup_label_error_message()
         self.setup_logic_table()
 
